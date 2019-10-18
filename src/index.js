@@ -21,30 +21,29 @@ class Chat extends React.Component{
                 alert("You must input a correct user name!")
                 user = prompt("Enter username:")
             }
-            console.log(user)
             this.setState(
-                {username: user}
-            )
-                console.log(this.state.username)
-            socket.emit('new_client', user)
-            this.addMessage({text: user + " has entered the chat", sender:"server", timestamp: Date.now()})
+                {username: user}, function(){
+                    socket.emit('new_client', this.state.username)
+                    this.addMessage({
+                        text: this.state.username + " has entered the chat",
+                        sender:"server",
+                        timestamp: Date.now()})
+                    })
         }
         socket.on('broadcast', data =>{
             let newList = this.state.messageList.concat([data])
             this.setState({messageList: newList})
-            console.log(this.state.messageList)
         })
 
     }
     addMessage(object) {
-        let newList = this.state.messageList.concat([object])
+        const array = this.state.messageList
+        let newList = array.concat([object])
         this.setState({
             messageList: newList})
-        console.log(this.state.messageList)
     }
 
     sendMessage(messageString){
-        console.log("je rentre ici")
         const message = {sender: this.state.username,
             text: messageString,
             timestamp: Date.now()}
@@ -114,7 +113,6 @@ class MessageInput extends React.Component{
         this.setState({
             message: event.target.value
         })
-        console.log(this.state.message)
     }
 
     handleSubmit(event){
@@ -123,6 +121,7 @@ class MessageInput extends React.Component{
         this.setState({
             message:''
         })
+         event.preventDefault();
     }
     render(){
         return(
