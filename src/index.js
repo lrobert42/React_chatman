@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import './index.css'
 
 const io = require('socket.io-client')
-const socket = io.connect('localhost:4242')
+const socket = io.connect('192.168.1.16:3001')
 
 class Chat extends React.Component{
     constructor(props){
@@ -32,20 +32,29 @@ class Chat extends React.Component{
             this.setState(
                 {username: user}, function(){
                     socket.emit('new_client', this.state.username)
-                    this.addMessage({
-                        text: this.state.username + " has entered the chat",
-                        sender:"server",
-                        timestamp: Date.now()})
                     })
         }
+        socket.on('connected', data=>{
+            this.addMessage(data)
+        })
+
         socket.on('broadcast', data =>{
-            let newList = this.state.messageList.concat([data])
-            this.setState({messageList: newList})
+            this.addMessage(data)
         })
 
         socket.on('isTyping', data =>{
 
             data == null ? this.setState({typingUsers: []}) : this.setState({typingUsers: data})
+        })
+
+        socket.on('history', array=>{
+            let i = 0
+            if(array){
+                while(i < array.length){
+                this.addMessage(array[i])
+                i++
+                }
+            }
         })
         this.scrollToBottom()
     }
@@ -86,6 +95,7 @@ class Chat extends React.Component{
         render(){
             return(
                 <div className="app">
+
                 <MessageList
                     typingUsers = {this.state.typingUsers}
                     messageList={this.state.messageList}
@@ -99,10 +109,12 @@ class Chat extends React.Component{
             )
         }
 }
-
+ // eslint-disable-next-line
 function Title(){
         return(
-            <h1>Chatman</h1>
+            <div className="title">
+            <h1 className="room_name">Chatman</h1>
+            </div>
         )
     }
 
@@ -110,7 +122,7 @@ class MessageList extends React.Component{
     renderIsTyping(array){
         if (array.length)
         {
-            if (array.length == 1)
+            if (array.length === 1)
             {   return(
                 <div>{array} is typing</div>
             )
@@ -123,7 +135,7 @@ class MessageList extends React.Component{
     }
 
     renderMessageList(object){
-        if (object.sender == "server"){
+        if (object.sender === "server"){
             return (
                 <div className="server_info" key={object.timestamp}><strong>{object.sender} :</strong>  {object.text}</div>
             )
@@ -170,7 +182,7 @@ class MessageInput extends React.Component{
         this.setState({
             message: event.target.value
         })
-            if(event.target.value != ''){
+            if(event.target.value !== ''){
                 this.props.isTyping(true)
             }
             else {

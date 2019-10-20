@@ -8,6 +8,20 @@
     font: normal 16px/normal Verdana, Geneva, sans-serif;
 }
 
+.title{
+    position:absolute;
+    width: 80%;
+    left:10%;
+    font: normal 22px/normal Verdana, Geneva, sans-serif;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.room_name
+{
+    vertical-align: middle;
+}
+
 .is_typing{
     display: inline-block;
     list-style-type: none;
