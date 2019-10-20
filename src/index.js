@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import './index.css'
 
 const io = require('socket.io-client')
 const socket = io.connect('localhost:4242')
@@ -7,10 +8,17 @@ const socket = io.connect('localhost:4242')
 class Chat extends React.Component{
     constructor(props){
         super(props)
+
         this.state = {
             messageList: [],
-            username:null
+            username:null,
+            isTyping:false,
+            typingUsers:[]
         }
+    }
+
+    scrollToBottom () {
+    document.getElementById("container").scrollBy(0, 100)
     }
 
     componentDidMount(){
@@ -35,32 +43,57 @@ class Chat extends React.Component{
             this.setState({messageList: newList})
         })
 
+        socket.on('isTyping', data =>{
+
+            data == null ? this.setState({typingUsers: []}) : this.setState({typingUsers: data})
+        })
+        this.scrollToBottom()
+    }
+
+    componentDidUpdate(){
+        this.scrollToBottom()
     }
     addMessage(object) {
         const array = this.state.messageList
         let newList = array.concat([object])
         this.setState({
-            messageList: newList})
+            messageList: newList},function(){
+
+            this.scrollToBottom()})
     }
 
     sendMessage(messageString){
-        const message = {sender: this.state.username,
+        const message = {
+            sender: this.state.username,
             text: messageString,
             timestamp: Date.now()}
         socket.emit('message', message)
         this.addMessage(message)
     }
 
+    isTyping(bool){
+        if (this.state.isTyping !== bool){
+            this.setState(
+                {isTyping:bool}, function(){
+                    socket.emit('isTyping', {
+                    username:this.state.username,
+                    bool: bool
+                })
+            })
+        }
+    }
+
         render(){
             return(
                 <div className="app">
-                <Title />
                 <MessageList
+                    typingUsers = {this.state.typingUsers}
                     messageList={this.state.messageList}
                     username={this.state.username}
                  />
                 <MessageInput
                     sendMessage={i=> this.sendMessage(i)}
+                    isTyping={bool => this.isTyping(bool)}
                 />
                 </div>
             )
@@ -74,24 +107,49 @@ function Title(){
     }
 
 class MessageList extends React.Component{
-
-renderMessageList(object){
-    if(object.sender === this.props.username){
-        return(
-        <li key={object.timestamp}><strong>{object.sender}:</strong>  {object.text}</li>)
-    } else {
-        return(
-        <li key={object.timestamp}><strong>{object.sender}:</strong>  {object.text}</li>)
+    renderIsTyping(array){
+        if (array.length)
+        {
+            if (array.length == 1)
+            {   return(
+                <div>{array} is typing</div>
+            )
+            } else {
+            return(
+                <div>{array.join(', ')} are typing</div>
+            )
+            }
+        }
     }
-}
+
+    renderMessageList(object){
+        if (object.sender == "server"){
+            return (
+                <div className="server_info" key={object.timestamp}><strong>{object.sender} :</strong>  {object.text}</div>
+            )
+        }
+        if(object.sender === this.props.username){
+            return(
+            <div className="message_out" key={object.timestamp}><strong>{object.sender} :</strong>  {object.text}</div>)
+        } else {
+            return(
+            <div className="message_in" key={object.timestamp}><strong>{object.sender} :</strong>  {object.text}</div>)
+        }
+    }
 
     render(){
         return(
-            <ul>
-            {this.props.messageList.map((messageList) =>(
-                this.renderMessageList(messageList)
-            ))}
-            </ul>
+            <div className="message_container" id="container">
+                <div className="message_list">
+                    {this.props.messageList.map((messageList) =>(
+                        this.renderMessageList(messageList)
+                    ))}
+                    <div className="is_typing">
+                        {this.renderIsTyping(this.props.typingUsers)}
+                    </div>
+                </div>
+
+            </div>
         )
     }
 }
@@ -108,21 +166,31 @@ class MessageInput extends React.Component{
         this.handleSubmit = this.handleSubmit.bind(this)
     }
 
-
     handleChange(event){
         this.setState({
             message: event.target.value
         })
+            if(event.target.value != ''){
+                this.props.isTyping(true)
+            }
+            else {
+                this.props.isTyping(false)
+            }
+        event.preventDefault()
     }
 
     handleSubmit(event){
-        this.props.sendMessage(this.state.message)
-        console.log("message sent")
-        this.setState({
-            message:''
-        })
+        if(this.state.message){
+            this.props.sendMessage(this.state.message)
+        }
+            this.setState({
+                message:''
+            }, function(){
+                this.props.isTyping(false)
+            })
          event.preventDefault();
     }
+
     render(){
         return(
             <form
@@ -139,5 +207,6 @@ class MessageInput extends React.Component{
 }
 
 ReactDOM.render(
+
     <Chat />,
     document.getElementById("root"));

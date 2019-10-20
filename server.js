@@ -1,23 +1,19 @@
 var http = require('http')
 var fs = require('fs')
+var typingUsers = []
+
 
 var server = http.createServer(function(req, res){
         res.writeHead(200, {"Content-type":"text/html"})
         res.end()
     })
- console.log("server connected")
+var io = require('socket.io')(server, {
+    pingInterval: 100000000,
+    pingTimeout: 10000
+})
 
-var id = 0
-var io = require('socket.io').listen(server)
-
-io.sockets.on('connection', function(socket, nickname){
-    console.log("Someone there")
+io.sockets.on('connection', function(socket, username){
     socket.on('new_client', function(username){
-            // if (username == null || username == "")
-            // {
-            //     socket.emit('error_username', "You must input a correct user name!")
-            //     console.log("Error username")
-            // } else {
                 socket.username = username
                 console.log("new client", username)
                 socket.broadcast.emit('broadcast', {
@@ -25,14 +21,42 @@ io.sockets.on('connection', function(socket, nickname){
                     sender: "server",
                     timestamp: Date.now()}
                 )
-            // }
     })
 
     socket.on('message', function(object){
-        id = id + 1
-        console.log("Message from: " + object.sender)
-        console.log("message received: " + object.text)
         socket.broadcast.emit('broadcast', object)
+
+    })
+    socket.on('disconnect', function(reason){
+        console.log(socket.username +" left")
+        socket.broadcast.emit('broadcast', {
+            text: socket.username + " has left the chat. Reason: " + reason,
+            sender: "server",
+            timestamp: Date.now()
+        })
+        if (typingUsers.includes(socket.username)){
+            let newList = [...typingUsers]
+            let index = newList.indexOf(object.username)
+            newList.splice(index, 1)
+            typingUsers = newList
+        }
+    })
+    socket.on('isTyping', function(object){
+        if (object.bool){
+            if(!typingUsers.includes(object.username)){
+                let newList = typingUsers.concat(object.username)
+                typingUsers = newList
+            }
+        }
+        else {
+            if(typingUsers.includes(object.username)){
+                let newList = [...typingUsers]
+                let index = newList.indexOf(object.username)
+                newList.splice(index, 1)
+                typingUsers = newList
+            }
+        }
+            socket.broadcast.emit('isTyping', typingUsers)
     })
 })
 
