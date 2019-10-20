@@ -77,11 +77,9 @@ function writeToJson(object, room){
 function readFromJson(socket, room){
     let date = setDate()
     let fullPath = "./log/"+room+"/"+date+".json"
-    console.log("fullPath; "+ fullPath)
     fs.exists(fullPath, function(exists){
         if(exists)
         {
-            console.log("file exists")
             fs.readFile(fullPath, 'utf-8', function(err, data){
                 if(err)
                 {throw err}
@@ -89,8 +87,8 @@ function readFromJson(socket, room){
                     socket.emit('history', JSON.parse(data), function(){
                         console.log("history send")
                     })
-                    socket.to(room).emit('connected',{
-                        text: socket.username +" has entered the chat",
+                    socket.emit('connected',{
+                        text: socket.username +" has entered the chat in room :" +room+" after readFile",
                         sender: "server",
                         timestamp: Date.now()
                     })
@@ -98,12 +96,12 @@ function readFromJson(socket, room){
             })
         }
         else{
-            socket.emit('history',
+            socket.emit('history',[
             {sender: "server",
             timestamp: Date.now(),
-            text:"No history today"})
+            text:"No history today"}])
             socket.to(room).emit('connected',{
-                text: socket.username +" has entered the chat",
+                text: socket.username +" has entered the room"
                 sender: "server",
                 timestamp: Date.now()
             })
@@ -129,14 +127,27 @@ io.sockets.on('connection', function(socket, username){
 
 
     socket.on('roomSelected', function(room){
+
+        if(socket.room)
+        {
+            const oldRoom = socket.room
+            let object = {
+                sender:"server",
+                timestamp:Date.now(),
+                text:socket.username+" has exited the room"
+            }
+            socket.to(oldRoom).emit('broadcast', object)
+            writeToJson(object, oldRoom)
+        }
         socket.join(room)
         socket.room = room
         readFromJson(socket, room)
         let object = {
-            text: socket.username +" has entered the chat",
+            text: socket.username +" has entered the room",
             sender: "server",
             timestamp: Date.now()}
-        socket.broadcast.to(room).emit('broadcast', object)
+        socket.to(room).emit('broadcast', object)
+        writeToJson(object, socket.room)
     })
     socket.on('message', function(object){
         socket.broadcast.to(socket.room).emit('broadcast', object)
@@ -145,13 +156,16 @@ io.sockets.on('connection', function(socket, username){
     })
     socket.on('disconnect', function(reason){
         console.log(socket.username +" left")
-        let object = {
-            text: socket.username + " has left the chat. Reason: " + reason,
-            sender: "server",
-            timestamp: Date.now()
+        if (socket.room){
+            let object = {
+                text: socket.username + " has left the chat. Reason: " + reason,
+                sender: "server",
+                timestamp: Date.now()
+            }
+            socket.broadcast.to(socket.room).emit('broadcast', object)
+            writeToJson(object, socket.room)
         }
-        socket.broadcast.emit('broadcast', object)
-        writeToJson(object, socket.room)
+
         if (typingUsers.includes(socket.username)){
             let newList = [...typingUsers]
             let index = newList.indexOf(object.username)
@@ -159,6 +173,7 @@ io.sockets.on('connection', function(socket, username){
             typingUsers = newList
         }
     })
+
     socket.on('isTyping', function(object){
         if (object.bool){
             if(!typingUsers.includes(object.username)){

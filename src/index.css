@@ -17,9 +17,49 @@
     vertical-align: middle;
 }
 
+.roomlist_open_drawer {
+  width: 80%;
+  height: 80%;
+  bottom: 10%;
+  margin-right: 10%;
+  margin-left: 10%;
+  padding: 20px;
+  margin-top: 5%;
+  overflow: scroll;
+  border: none;
+  font: normal 16px/1 Verdana, Geneva, sans-serif;
+  text-align: center;
+  background: #d5e0e5;
+  -webkit-box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.3) ;
+  box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.3) ;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.2) ;
+  transition-delay: margin .5s
+
+}
+.roomlist_closed_drawer{
+    margin-top: 5%;
+    position:absolute;
+    width: 20%;
+    height: 76%;
+    bottom: 10%;
+    margin-left: 5%;
+    padding: 20px;
+    margin-top: 5%;
+    overflow: scroll;
+    font: normal 16px/1 Verdana, Geneva, sans-serif;
+    text-align: center;
+    background: #d5e0e5;
+    -webkit-box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.3) ;
+    box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.3) ;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.2) ;
+    transition-delay: margin .5s;
+    padding: 20px;
+}
+
 .room_name
 {
     vertical-align: middle;
+    margin: 10px;
 }
 
 .is_typing{
@@ -35,13 +75,12 @@
 
 .send_message_form {
   display: inline-block;
-  box-sizing: content-box;
-  width: 80%;
+  width: 64.7%;
   position: absolute;
-  bottom: 8%;
+  bottom: 7.8%;
   vertical-align: middle;
   right: 10%;
-  left: 10%;
+  left: 29%;
   padding: auto 10px 1000px;
   overflow: hidden;
   border: 1px solid #b7b7b7;
@@ -50,9 +89,10 @@
 }
 
 input {
-  width: 100%;
   height: 100%;
+  width: 100%;
   vertical-align: middle;
+  left:29%
 }
 
 .message_in{
@@ -106,16 +146,16 @@ input {
 
 .message_container {
   box-sizing: border-box;
-  width: 80%;
+  width: 65%;
   height: 80%;
   position: absolute;
   bottom: 10%;
   right: 10%;
-  left: 10%;
+  left:29%;
   padding: 20px;
   margin-top: 5%;
   overflow: scroll;
-  border: none;
+  border-style: solid;
   font: normal 16px/1 Verdana, Geneva, sans-serif;
   text-align: center;
   background: #d5e0e5;

@@ -54,14 +54,22 @@ class App extends React.Component{
 
     renderChat(){
         if(this.state.selectedRoom){
-            return(<Chatroom
+            return(
+                <div>
+                <MainScreen
+                    roomList={this.state.roomList}
+                    roomSelect={i => this.roomSelect(i)}
+                    selectedRoom={this.state.selectedRoom}/>
+                <Chatroom
                 selectedRoom = {this.state.selectedRoom}
-                username ={this.state.username} />)
+                username ={this.state.username} />
+            </div>)
         }
         else {
             return(<MainScreen
                 roomList={this.state.roomList}
-                roomSelect={i => this.roomSelect(i)}/>)
+                roomSelect={i => this.roomSelect(i)}
+                selectedRoom={this.state.selectedRoom}/>)
         }
     }
 
@@ -77,10 +85,17 @@ class MainScreen extends React.Component{
 
 constructor(props){
     super(props)
+    this.state ={
+        drawer: this.props.selectedRoom ? "roomlist_closed_drawer" :"roomlist_open_drawer"
+    }
     this.handleClick = this.handleClick.bind(this)
 }
+
     handleClick(e){
-        this.props.roomSelect(e)
+        if (this.props.selectedRoom !== e)
+        {
+            this.props.roomSelect(e)
+        }
     }
 
     renderRoomList(room){
@@ -90,7 +105,7 @@ constructor(props){
 
     render(){
         return(
-        <div>
+        <div className={this.state.drawer} id="wrapper">
             {this.props.roomList.map((roomList) =>(
                 this.renderRoomList(roomList)
             ))}
@@ -140,8 +155,12 @@ class Chatroom extends React.Component{
         this.scrollToBottom()
     }
 
-    componentDidUpdate(){
+    componentDidUpdate(prevProps){
         this.scrollToBottom()
+        if (this.props.selectedRoom !== prevProps.selectedRoom)
+        {
+            this.setState({messageList:[]})
+        }
     }
     addMessage(object) {
         const array = this.state.messageList
