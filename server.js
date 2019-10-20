@@ -2,6 +2,35 @@ var http = require('http')
 var fs = require('fs')
 var typingUsers = []
 
+var roomList = getRoomList()
+
+function getRoomList(){
+    let path = "./roomList.json"
+    fs.exists(path, function(exists){
+        if(exists){
+            fs.readFileSync(path, 'utf-8', function(err, data){
+                if(err)
+                {
+                    throw err
+                }
+                else {
+                var roomList = JSON.parse(data)
+                    return (roomList)
+                }
+            })
+        }
+        else {
+            return (roomList = [
+                {id:1,
+                name:"test1"},
+                {id:2,
+                name:"test2"},
+                {id:3,
+                name:"test3"}
+            ])
+        }
+    })
+}
 
 function setDate(){
     var date = ""
@@ -9,12 +38,12 @@ function setDate(){
     date+= time.getDate().toString()
     date+= time.getMonth().toString()
     date+= time.getFullYear().toString()
-
     return date
 }
 
-function writeToJson(string, object){
-    let fullPath = "./log/"+string+".json"
+function writeToJson(object, room){
+    let date = setDate()
+    let fullPath = "./log/"+room+"/"+date+".json"
     fs.exists(fullPath, function(exists){
         if(exists)
         {
@@ -34,7 +63,6 @@ function writeToJson(string, object){
             })
         }
         else {
-            console.log(object)
             let table = [object]
             json = JSON.stringify(table)
             fs.writeFile(fullPath, json, function(err){
@@ -46,18 +74,22 @@ function writeToJson(string, object){
     })
 }
 
-function readFromJson(socket){
+function readFromJson(socket, room){
     let date = setDate()
-    let fullPath = "./log/"+date+".json"
+    let fullPath = "./log/"+room+"/"+date+".json"
+    console.log("fullPath; "+ fullPath)
     fs.exists(fullPath, function(exists){
         if(exists)
         {
+            console.log("file exists")
             fs.readFile(fullPath, 'utf-8', function(err, data){
                 if(err)
                 {throw err}
                 else {
-                    socket.emit('history', JSON.parse(data))
-                    socket.emit('connected',{
+                    socket.emit('history', JSON.parse(data), function(){
+                        console.log("history send")
+                    })
+                    socket.to(room).emit('connected',{
                         text: socket.username +" has entered the chat",
                         sender: "server",
                         timestamp: Date.now()
@@ -70,7 +102,7 @@ function readFromJson(socket){
             {sender: "server",
             timestamp: Date.now(),
             text:"No history today"})
-            socket.emit('connected',{
+            socket.to(room).emit('connected',{
                 text: socket.username +" has entered the chat",
                 sender: "server",
                 timestamp: Date.now()
@@ -92,18 +124,23 @@ io.sockets.on('connection', function(socket, username){
     socket.on('new_client', function(username){
                 socket.username = username
                 console.log("new client", username)
-                readFromJson(socket)
-                let object = {
-                    text: socket.username +" has entered the chat",
-                    sender: "server",
-                    timestamp: Date.now()}
-                socket.broadcast.emit('broadcast', object)
-
+                socket.emit('roomList', roomList)
     })
 
+
+    socket.on('roomSelected', function(room){
+        socket.join(room)
+        socket.room = room
+        readFromJson(socket, room)
+        let object = {
+            text: socket.username +" has entered the chat",
+            sender: "server",
+            timestamp: Date.now()}
+        socket.broadcast.to(room).emit('broadcast', object)
+    })
     socket.on('message', function(object){
-        socket.broadcast.emit('broadcast', object)
-        writeToJson(setDate(), object)
+        socket.broadcast.to(socket.room).emit('broadcast', object)
+        writeToJson(object, socket.room)
 
     })
     socket.on('disconnect', function(reason){
@@ -114,7 +151,7 @@ io.sockets.on('connection', function(socket, username){
             timestamp: Date.now()
         }
         socket.broadcast.emit('broadcast', object)
-        writeToJson(setDate(), object)
+        writeToJson(object, socket.room)
         if (typingUsers.includes(socket.username)){
             let newList = [...typingUsers]
             let index = newList.indexOf(object.username)
@@ -137,7 +174,7 @@ io.sockets.on('connection', function(socket, username){
                 typingUsers = newList
             }
         }
-            socket.broadcast.emit('isTyping', typingUsers)
+            socket.broadcast.to(socket.room).emit('isTyping', typingUsers)
     })
 })
 

@@ -5,13 +5,105 @@ import './index.css'
 const io = require('socket.io-client')
 const socket = io.connect('192.168.1.16:3001')
 
-class Chat extends React.Component{
+
+class App extends React.Component{
+    constructor(props){
+        super(props)
+
+        this.state = {
+            username: null,
+            selectedRoom: null,
+            roomList:[]
+        }
+    }
+
+    componentDidMount(){
+        if (this.state.username == null){
+            // var user= "Bernard"
+            var user = prompt("Enter username:")
+            while(user === null || user === "")
+            {
+                alert("You must input a correct user name!")
+                user = prompt("Enter username:")
+            }
+            this.setState({
+                username: user}, function(){
+                    socket.emit('new_client',
+                     this.state.username)
+            })
+        }
+        socket.on('roomList', data =>{
+            this.getRoomList(data)
+        })
+    }
+
+    getRoomList(data){
+        const array = this.state.roomList
+        let newList = array.concat(data)
+        this.setState({
+            roomList: newList}, function(){
+                console.log("Roomlist: "+this.state.roomList)
+            })
+    }
+
+    roomSelect(room){
+        this.setState({selectedRoom:room}, function(){
+            socket.emit('roomSelected', this.state.selectedRoom)
+        })
+    }
+
+    renderChat(){
+        if(this.state.selectedRoom){
+            return(<Chatroom
+                selectedRoom = {this.state.selectedRoom}
+                username ={this.state.username} />)
+        }
+        else {
+            return(<MainScreen
+                roomList={this.state.roomList}
+                roomSelect={i => this.roomSelect(i)}/>)
+        }
+    }
+
+    render(){
+        return(
+            <div className="app">{this.renderChat()} </div>
+        )
+    }
+
+}
+
+class MainScreen extends React.Component{
+
+constructor(props){
+    super(props)
+    this.handleClick = this.handleClick.bind(this)
+}
+    handleClick(e){
+        this.props.roomSelect(e)
+    }
+
+    renderRoomList(room){
+        return(
+        <div className="room" key={room.id} onClick={() => this.handleClick(room.name)}>{room.name}</div>)
+    }
+
+    render(){
+        return(
+        <div>
+            {this.props.roomList.map((roomList) =>(
+                this.renderRoomList(roomList)
+            ))}
+        </div>
+        )}
+}
+
+class Chatroom extends React.Component{
     constructor(props){
         super(props)
 
         this.state = {
             messageList: [],
-            username:null,
             isTyping:false,
             typingUsers:[]
         }
@@ -22,18 +114,6 @@ class Chat extends React.Component{
     }
 
     componentDidMount(){
-        if (this.state.username == null){
-            var user = prompt("Enter username:")
-            while(user === null || user === "")
-            {
-                alert("You must input a correct user name!")
-                user = prompt("Enter username:")
-            }
-            this.setState(
-                {username: user}, function(){
-                    socket.emit('new_client', this.state.username)
-                    })
-        }
         socket.on('connected', data=>{
             this.addMessage(data)
         })
@@ -48,6 +128,7 @@ class Chat extends React.Component{
         })
 
         socket.on('history', array=>{
+            console.log("history received")
             let i = 0
             if(array){
                 while(i < array.length){
@@ -73,9 +154,10 @@ class Chat extends React.Component{
 
     sendMessage(messageString){
         const message = {
-            sender: this.state.username,
+            sender: this.props.username,
             text: messageString,
-            timestamp: Date.now()}
+            timestamp: Date.now(),
+            room: this.props.selectedRoom}
         socket.emit('message', message)
         this.addMessage(message)
     }
@@ -85,8 +167,9 @@ class Chat extends React.Component{
             this.setState(
                 {isTyping:bool}, function(){
                     socket.emit('isTyping', {
-                    username:this.state.username,
-                    bool: bool
+                    username:this.props.username,
+                    bool: bool,
+                    room:this.props.selectedRoom
                 })
             })
         }
@@ -95,28 +178,31 @@ class Chat extends React.Component{
         render(){
             return(
                 <div className="app">
-
-                <MessageList
-                    typingUsers = {this.state.typingUsers}
-                    messageList={this.state.messageList}
-                    username={this.state.username}
-                 />
-                <MessageInput
-                    sendMessage={i=> this.sendMessage(i)}
-                    isTyping={bool => this.isTyping(bool)}
-                />
+                    <Title
+                    selectedRoom={this.props.selectedRoom}/>
+                    <MessageList
+                        typingUsers = {this.state.typingUsers}
+                        messageList={this.state.messageList}
+                        username={this.props.username}
+                     />
+                    <MessageInput
+                        sendMessage={i=> this.sendMessage(i)}
+                        isTyping={bool => this.isTyping(bool)}
+                    />
                 </div>
             )
         }
 }
  // eslint-disable-next-line
-function Title(){
+class Title extends React.Component{
+    render(){
         return(
             <div className="title">
-            <h1 className="room_name">Chatman</h1>
+            <h1 className="room_name">{this.props.selectedRoom}</h1>
             </div>
         )
     }
+}
 
 class MessageList extends React.Component{
     renderIsTyping(array){
@@ -220,5 +306,5 @@ class MessageInput extends React.Component{
 
 ReactDOM.render(
 
-    <Chat />,
+    <App />,
     document.getElementById("root"));
