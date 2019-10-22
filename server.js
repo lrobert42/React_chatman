@@ -2,6 +2,86 @@ var http = require('http')
 var fs = require('fs')
 var typingUsers = []
 
+
+function isInArray(array, object){
+
+    if (array.length == 0)
+    {
+        return false
+    } else {
+        for (i = 0; i < array.length; i++){
+            if (array[i].username === object.username && array[i].password == object.password)
+            {
+                return true
+            }
+        }
+        return false
+    }
+}
+
+function checkUserList(socket, credentials){
+    let path = "./users/userList.json"
+    fs.exists(path, function(exists){
+        if (exists){
+            fs.readFile(path, 'utf-8', function(err, data){
+                if (err){
+                    throw erre
+                }else {
+                    var userList = JSON.parse(data)
+                    if (isInArray(userList, credentials))
+                    {
+                        console.log(credentials.username +" is connecting")
+                        socket.emit('connection_approved', credentials.username)
+                        socket.username = credentials.username
+                        getRoomList(socket)
+                    }
+                    else {
+                        console.log("Wrong credentials. Connection denied")
+                        socket.emit('connection_denied')
+                    }
+                }
+            })
+        }
+    })
+}
+
+function registerUser(socket, credentials){
+    let path = "./users/userList.json"
+    fs.exists(path, function(exists){
+        if (exists){
+            console.log("file exists")
+            fs.readFile(path, 'utf-8', function(err, data){
+                if (err){
+                    throw err
+                } else {
+                    var userList = JSON.parse(data)
+                    console.log(userList)
+                    if (isInArray(userList, credentials))
+                    {
+                        console.log(credentials.username +" is already registered")
+                        socket.emit('already_registered', credentials.username)
+                    }
+                    else {
+                        userList.push(credentials)
+                        console.log(userList)
+                        json = JSON.stringify(userList )
+                        fs.writeFile(path, json, function(err){
+                            if (err)
+                            {   throw err}
+                            else {
+                                console.log("Connection approved. New client: " + credentials.username)
+                                socket.emit('connection_approved', credentials.username)
+                                socket.username = credentials.username,
+                                getRoomList(socket)
+                            }
+                        })
+                    }
+                }
+            })
+        }
+    })
+}
+
 function getRoomList(socket){
     let path = "./roomList.json"
     fs.exists(path, function(exists){
@@ -40,7 +120,7 @@ function setDate(){
     return date
 }
 
-function writeToJson(object, room){
+function writeHistory(object, room){
     let date = setDate()
     let fullPath = "./log/"+room+"/"+date+".json"
     fs.exists(fullPath, function(exists){
@@ -73,7 +153,7 @@ function writeToJson(object, room){
     })
 }
 
-function readFromJson(socket, room){
+function readHistory(socket, room){
     let date = setDate()
     let fullPath = "./log/"+room+"/"+date+".json"
     fs.exists(fullPath, function(exists){
@@ -117,11 +197,19 @@ var io = require('socket.io')(server, {
 })
 
 io.sockets.on('connection', function(socket, username){
-    socket.on('new_client', function(username){
-                socket.username = username
-                console.log("new client", username)
-                getRoomList(socket)
+
+    socket.on('connect_from_cookie', function(username){
+    //    socket.emit('connection_approved', username)
+        socket.username = username
+        getRoomList(socket)
+    })
+    socket.on('new_client', function(credentials){
+                checkUserList(socket, credentials)
             })
+
+    socket.on('registration_asked', credentials =>{
+        registerUser(socket, credentials)
+    })
 
     socket.on('roomSelected', function(room){
 
@@ -134,21 +222,21 @@ io.sockets.on('connection', function(socket, username){
                 text:socket.username+" has exited the room"
             }
             socket.to(oldRoom).emit('broadcast', object)
-            writeToJson(object, oldRoom)
+            writeHistory(object, oldRoom)
         }
         socket.join(room)
         socket.room = room
-        readFromJson(socket, room)
+        readHistory(socket, room)
         let object = {
             text: socket.username +" has entered the room",
             sender: "server",
             timestamp: Date.now()}
         socket.to(room).emit('broadcast', object)
-        writeToJson(object, socket.room)
+        writeHistory(object, socket.room)
     })
     socket.on('message', function(object){
         socket.broadcast.to(socket.room).emit('broadcast', object)
-        writeToJson(object, socket.room)
+        writeHistory(object, socket.room)
 
     })
     socket.on('disconnect', function(reason){
@@ -160,7 +248,7 @@ io.sockets.on('connection', function(socket, username){
                 timestamp: Date.now()
             }
             socket.broadcast.to(socket.room).emit('broadcast', object)
-            writeToJson(object, socket.room)
+            writeHistory(object, socket.room)
         }
 
         if (typingUsers.includes(socket.username)){

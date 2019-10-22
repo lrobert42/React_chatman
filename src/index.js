@@ -1,10 +1,22 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
+import  cookie  from 'react-cookies'
 import Chatroom from './chatComponents/Chatroom.js'
+import LoginScreen from './MainScreenComponents/LoginScreen.js'
 
 const io = require('socket.io-client')
 const socket = io.connect('192.168.1.16:3001')
+
+
+// function Root(){
+//     return(
+//         <CookiesProvider>
+//         <App />
+//         </CookiesProvider>
+//     )
+// }
+
 
 class App extends React.Component{
     constructor(props){
@@ -13,25 +25,38 @@ class App extends React.Component{
         this.state = {
             username: null,
             selectedRoom: null,
-            roomList:[]
+            roomList:[],
+            isConnected: false
         }
     }
 
     componentDidMount(){
-        if (this.state.username == null){
-            // var user= "Bernard"
-            var user = prompt("Enter username:")
-            while(user === null || user === "")
-            {
-                alert("You must input a correct user name!")
-                user = prompt("Enter username:")
-            }
+        var connectedCookie = cookie.load('connected')
+        if (connectedCookie){
             this.setState({
-                username: user}, function(){
-                    socket.emit('new_client',
-                     this.state.username)
+                isConnected:true,
+                username: connectedCookie
+            }, function(){
+                socket.emit('connect_from_cookie', this.state.username)
+                console.log(this.state.username)
+                console.log(this.state.isConnected)
             })
         }
+
+        // if (this.state.username == null){
+        //     // var user= "Bernard"
+        //     var user = prompt("Enter username:")
+        //     while(user === null || user === "")
+        //     {
+        //         alert("You must input a correct user name!")
+        //         user = prompt("Enter username:")
+        //     }
+        //     this.setState({
+        //         username: user}, function(){
+        //             socket.emit('new_client',
+        //              this.state.username)
+        //     })
+        // }
         socket.on('roomList', data =>{
             this.getRoomList(data)
         })
@@ -51,12 +76,26 @@ class App extends React.Component{
         })
     }
 
+    userConnected(username){
+        this.setState({
+            username: username,
+            isConnected:true
+        }, function(){
+            cookie.save('connected', username, {maxAge:15*60})
+            console.log("User connected. cookie set")
+            // SET COOKIE // TODO:
+        })
+    }
+
     renderChat(){
-    // if (!cookie){
-    //
-    //     <Login />
-    // }
-    // else{
+    if (!this.state.isConnected){
+        return(
+        <LoginScreen
+        userConnected = {i => this.userConnected(i)}
+        socket={socket}/>
+        )
+    }
+    else{
         if(this.state.selectedRoom){
             return(
                 <div>
@@ -77,7 +116,7 @@ class App extends React.Component{
                 selectedRoom={this.state.selectedRoom}/>)
         }
     }
-// }
+}
 
     render(){
         return(
@@ -86,9 +125,7 @@ class App extends React.Component{
     }
 }
 
-class Login extends React.Component{
 
-}
 
 
 class MainScreen extends React.Component{
