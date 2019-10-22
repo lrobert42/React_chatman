@@ -2,32 +2,31 @@ var http = require('http')
 var fs = require('fs')
 var typingUsers = []
 
-var roomList = getRoomList()
-
-function getRoomList(){
+function getRoomList(socket){
     let path = "./roomList.json"
     fs.exists(path, function(exists){
         if(exists){
-            fs.readFileSync(path, 'utf-8', function(err, data){
+            fs.readFile(path, 'utf-8', function(err, data){
                 if(err)
                 {
                     throw err
                 }
                 else {
                 var roomList = JSON.parse(data)
-                    return (roomList)
+                socket.emit('roomList', roomList)
                 }
             })
         }
         else {
-            return (roomList = [
+            var roomList = [
                 {id:1,
                 name:"test1"},
                 {id:2,
                 name:"test2"},
                 {id:3,
                 name:"test3"}
-            ])
+            ]
+            socket.emit('roomList', roomList)
         }
     })
 }
@@ -85,10 +84,9 @@ function readFromJson(socket, room){
                 {throw err}
                 else {
                     socket.emit('history', JSON.parse(data), function(){
-                        console.log("history send")
                     })
                     socket.emit('connected',{
-                        text: socket.username +" has entered the chat in room :" +room+" after readFile",
+                        text: socket.username +" has entered the room",
                         sender: "server",
                         timestamp: Date.now()
                     })
@@ -101,7 +99,7 @@ function readFromJson(socket, room){
             timestamp: Date.now(),
             text:"No history today"}])
             socket.to(room).emit('connected',{
-                text: socket.username +" has entered the room"
+                text: socket.username +" has entered the room",
                 sender: "server",
                 timestamp: Date.now()
             })
@@ -122,9 +120,8 @@ io.sockets.on('connection', function(socket, username){
     socket.on('new_client', function(username){
                 socket.username = username
                 console.log("new client", username)
-                socket.emit('roomList', roomList)
-    })
-
+                getRoomList(socket)
+            })
 
     socket.on('roomSelected', function(room){
 

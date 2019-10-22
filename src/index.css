@@ -33,9 +33,14 @@
   -webkit-box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.3) ;
   box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.3) ;
   text-shadow: 1px 1px 1px rgba(0,0,0,0.2) ;
-  transition-delay: margin .5s
-
+  transition: all 0.5s ease-out;
 }
+div#wrapper.closed.roomlist_open_drawer{
+    width: 20%;
+
+    margin-left: 5%;
+}
+
 .roomlist_closed_drawer{
     margin-top: 5%;
     position:absolute;
@@ -110,7 +115,7 @@ input {
     margin-top: 8px;
     text-overflow: clip;
     white-space: normal;
-    box-sizing: border-box;
+
     word-wrap:break-word
 }
 
@@ -129,7 +134,7 @@ input {
     margin-top: 8px;
     text-overflow: clip;
     white-space: normal;
-    box-sizing: border-box;
+
     word-wrap:break-word
 
 }

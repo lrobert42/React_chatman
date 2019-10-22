@@ -1,10 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
+import Chatroom from './chatComponents/Chatroom.js'
 
 const io = require('socket.io-client')
 const socket = io.connect('192.168.1.16:3001')
-
 
 class App extends React.Component{
     constructor(props){
@@ -41,8 +41,7 @@ class App extends React.Component{
         const array = this.state.roomList
         let newList = array.concat(data)
         this.setState({
-            roomList: newList}, function(){
-                console.log("Roomlist: "+this.state.roomList)
+            roomList: newList
             })
     }
 
@@ -53,6 +52,11 @@ class App extends React.Component{
     }
 
     renderChat(){
+    // if (!cookie){
+    //
+    //     <Login />
+    // }
+    // else{
         if(this.state.selectedRoom){
             return(
                 <div>
@@ -62,7 +66,8 @@ class App extends React.Component{
                     selectedRoom={this.state.selectedRoom}/>
                 <Chatroom
                 selectedRoom = {this.state.selectedRoom}
-                username ={this.state.username} />
+                username ={this.state.username}
+                socket={socket} />
             </div>)
         }
         else {
@@ -72,14 +77,19 @@ class App extends React.Component{
                 selectedRoom={this.state.selectedRoom}/>)
         }
     }
+// }
 
     render(){
         return(
             <div className="app">{this.renderChat()} </div>
         )
     }
+}
+
+class Login extends React.Component{
 
 }
+
 
 class MainScreen extends React.Component{
 
@@ -87,10 +97,17 @@ constructor(props){
     super(props)
     this.state ={
         drawer: this.props.selectedRoom ? "roomlist_closed_drawer" :"roomlist_open_drawer"
+        //drawer: "roomlist_open_drawer"
     }
     this.handleClick = this.handleClick.bind(this)
 }
-
+    componentDidMount(){
+        if(this.props.roomSelected){
+            console.log("updtaing")
+            // const wrapper = document.getElementById("wrapper")
+            // wrapper.classList.add('closed')
+        }
+    }
     handleClick(e){
         if (this.props.selectedRoom !== e)
         {
@@ -112,217 +129,6 @@ constructor(props){
         </div>
         )}
 }
-
-class Chatroom extends React.Component{
-    constructor(props){
-        super(props)
-
-        this.state = {
-            messageList: [],
-            isTyping:false,
-            typingUsers:[]
-        }
-    }
-
-    scrollToBottom () {
-    document.getElementById("container").scrollBy(0, 100)
-    }
-
-    componentDidMount(){
-        socket.on('connected', data=>{
-            this.addMessage(data)
-        })
-
-        socket.on('broadcast', data =>{
-            this.addMessage(data)
-        })
-
-        socket.on('isTyping', data =>{
-
-            data == null ? this.setState({typingUsers: []}) : this.setState({typingUsers: data})
-        })
-
-        socket.on('history', array=>{
-            console.log("history received")
-            let i = 0
-            if(array){
-                while(i < array.length){
-                this.addMessage(array[i])
-                i++
-                }
-            }
-        })
-        this.scrollToBottom()
-    }
-
-    componentDidUpdate(prevProps){
-        this.scrollToBottom()
-        if (this.props.selectedRoom !== prevProps.selectedRoom)
-        {
-            this.setState({messageList:[]})
-        }
-    }
-    addMessage(object) {
-        const array = this.state.messageList
-        let newList = array.concat([object])
-        this.setState({
-            messageList: newList},function(){
-
-            this.scrollToBottom()})
-    }
-
-    sendMessage(messageString){
-        const message = {
-            sender: this.props.username,
-            text: messageString,
-            timestamp: Date.now(),
-            room: this.props.selectedRoom}
-        socket.emit('message', message)
-        this.addMessage(message)
-    }
-
-    isTyping(bool){
-        if (this.state.isTyping !== bool){
-            this.setState(
-                {isTyping:bool}, function(){
-                    socket.emit('isTyping', {
-                    username:this.props.username,
-                    bool: bool,
-                    room:this.props.selectedRoom
-                })
-            })
-        }
-    }
-
-        render(){
-            return(
-                <div className="app">
-                    <Title
-                    selectedRoom={this.props.selectedRoom}/>
-                    <MessageList
-                        typingUsers = {this.state.typingUsers}
-                        messageList={this.state.messageList}
-                        username={this.props.username}
-                     />
-                    <MessageInput
-                        sendMessage={i=> this.sendMessage(i)}
-                        isTyping={bool => this.isTyping(bool)}
-                    />
-                </div>
-            )
-        }
-}
- // eslint-disable-next-line
-class Title extends React.Component{
-    render(){
-        return(
-            <div className="title">
-            <h1 className="room_name">{this.props.selectedRoom}</h1>
-            </div>
-        )
-    }
-}
-
-class MessageList extends React.Component{
-    renderIsTyping(array){
-        if (array.length)
-        {
-            if (array.length === 1)
-            {   return(
-                <div>{array} is typing</div>
-            )
-            } else {
-            return(
-                <div>{array.join(', ')} are typing</div>
-            )
-            }
-        }
-    }
-
-    renderMessageList(object){
-        if (object.sender === "server"){
-            return (
-                <div className="server_info" key={object.timestamp}><strong>{object.sender} :</strong>  {object.text}</div>
-            )
-        }
-        if(object.sender === this.props.username){
-            return(
-            <div className="message_out" key={object.timestamp}><strong>{object.sender} :</strong>  {object.text}</div>)
-        } else {
-            return(
-            <div className="message_in" key={object.timestamp}><strong>{object.sender} :</strong>  {object.text}</div>)
-        }
-    }
-
-    render(){
-        return(
-            <div className="message_container" id="container">
-                <div className="message_list">
-                    {this.props.messageList.map((messageList) =>(
-                        this.renderMessageList(messageList)
-                    ))}
-                    <div className="is_typing">
-                        {this.renderIsTyping(this.props.typingUsers)}
-                    </div>
-                </div>
-
-            </div>
-        )
-    }
-}
-
-
-class MessageInput extends React.Component{
-
-    constructor(props){
-        super(props)
-        this.state = {
-            message:''
-        }
-        this.handleChange = this.handleChange.bind(this)
-        this.handleSubmit = this.handleSubmit.bind(this)
-    }
-
-    handleChange(event){
-        this.setState({
-            message: event.target.value
-        })
-            if(event.target.value !== ''){
-                this.props.isTyping(true)
-            }
-            else {
-                this.props.isTyping(false)
-            }
-        event.preventDefault()
-    }
-
-    handleSubmit(event){
-        if(this.state.message){
-            this.props.sendMessage(this.state.message)
-        }
-            this.setState({
-                message:''
-            }, function(){
-                this.props.isTyping(false)
-            })
-         event.preventDefault();
-    }
-
-    render(){
-        return(
-            <form
-               onSubmit={this.handleSubmit}
-               className="send_message_form">
-               <input
-                   onChange={this.handleChange}
-                   value={this.state.message}
-                   placeholder="Type your message and hit ENTER"
-                   type="text"/>
-           </form>
-        )
-    }
-}
-
 ReactDOM.render(
 
     <App />,
