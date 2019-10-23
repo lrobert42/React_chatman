@@ -32,7 +32,7 @@ export default class Chatroom extends React.Component{
         })
 
         this.props.socket.on('disconnect', reason =>{
-            this.props.disconected()
+            this.props.disconnect()
         })
 
         this.props.socket.on('history', array=>{

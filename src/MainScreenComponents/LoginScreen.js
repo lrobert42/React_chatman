@@ -1,19 +1,20 @@
 import React from 'react'
 
 export default class LoginScreen extends React.Component{
-constructor(props){
-    super(props)
-    this.state = {
-        screen: "login",
-        denied:false,
-        username:'',
-        password:''
+    constructor(props){
+        super(props)
+        this.state = {
+            screen: "login",
+            denied:false,
+            username:'',
+            password:''
+        }
+        this.switchLoginRegister = this.switchLoginRegister.bind(this)
+        this.handleUsernameChange = this.handleUsernameChange.bind(this)
+        this.handlePasswordChange = this.handlePasswordChange.bind(this)
+        this.handleSubmit = this.handleSubmit.bind(this)
     }
-    this.switchLoginRegister = this.switchLoginRegister.bind(this)
-    this.handleUsernameChange = this.handleUsernameChange.bind(this)
-    this.handlePasswordChange = this.handlePasswordChange.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
-}
+
     userLogin(credentials){
         this.props.socket.emit('new_client', credentials)
         this.props.socket.on('connection_approved', user =>{
@@ -105,9 +106,9 @@ constructor(props){
 
     render(){
         return(
-            <div className="login_form">
-            <h1 className="form_title">{this.capitalizeFirstLetter(this.state.screen)}</h1>
-                <form className = "username_input"
+            <div className=" w3-card-4 login_form">
+            <h1 className="w3-container form_title">{this.capitalizeFirstLetter(this.state.screen)}</h1>
+                <form className = "w3-input username_input"
                 onSubmit = {this.handleSubmit}>
                     <input
                     type="text"
@@ -115,7 +116,7 @@ constructor(props){
                     value={this.state.username}
                     placeholder="Username"/>
                 </form>
-                <form className="password_input"
+                <form className=" w3-input password_input"
                     onSubmit={this.handleSubmit}>
                     <input
                     onChange={this.handlePasswordChange}
@@ -138,5 +139,4 @@ constructor(props){
             </div>
         )
     }
-
 }

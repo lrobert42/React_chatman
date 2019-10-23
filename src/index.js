@@ -8,7 +8,6 @@ import LoginScreen from './MainScreenComponents/LoginScreen.js'
 const io = require('socket.io-client')
 const socket = io.connect('http://192.168.1.16:3001')
 
-
 class App extends React.Component{
     constructor(props){
         super(props)
@@ -54,14 +53,18 @@ class App extends React.Component{
         })
 
         socket.io.on('connect_error', () =>{
-            this.setState({isConnected:false})
-            if (cookie.load('connected')){
-                cookie.remove('connected')
-            }
-            alert("There's an issue on the server. Please try again later")
+            this.disconnect()
         })
     }
 
+
+    disconnect(){
+        this.setState({isConnected:false})
+        if (cookie.load('connected')){
+            cookie.remove('connected')
+        }
+        alert("There's an issue on the server. Please try again later")
+    }
     getRoomList(data){
         const array = this.state.roomList
         let newList = array.concat(data)
@@ -109,6 +112,7 @@ class App extends React.Component{
                 selectedRoom = {this.state.selectedRoom}
                 username ={this.state.username}
                 socket={socket}
+                disconnect={() => this.disconnect()}
                  />
             </div>)
         }
@@ -133,7 +137,7 @@ class MainScreen extends React.Component{
 
 constructor(props){
     super(props)
-    this.state ={
+    this.state = {
         drawer: this.props.selectedRoom ? "roomlist_closed_drawer" :"roomlist_open_drawer"
         //drawer: "roomlist_open_drawer"
     }
@@ -166,13 +170,13 @@ constructor(props){
 
     render(){
         return(
-        <div className={this.state.drawer} id="wrapper">
+        <div className= {this.state.drawer} id="wrapper">
             {this.props.selectedRoom ? <h3> Your channels </h3> : null}
             {!this.props.roomList ? <h1>You subscription list seems empty... Browse TODO: POPUP</h1> :
                 this.props.roomList.map((room) =>(
                 this.renderRoomList(room)
             ))}
-            <h4>Connected  users</h4>
+            <h4>Connected users</h4>
             <ul>{this.props.userList.map((user) =>(this.renderUserList(user)))}
             </ul>
         </div>

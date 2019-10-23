@@ -84,21 +84,15 @@ input[className="username_input"], input[type=password] {
   text-shadow: 1px 1px 1px rgba(0,0,0,0.2) ;
   transition: all 0.5s ease-out;
 }
-div#wrapper.closed.roomlist_open_drawer{
-    width: 20%;
 
-    margin-left: 5%;
-}
 
 .roomlist_closed_drawer{
     margin-top: 5%;
     position:absolute;
     width: 20%;
-    height: 76%;
+    height: 80%;
     bottom: 10%;
     margin-left: 5%;
-    padding: 20px;
-    margin-top: 5%;
     overflow: scroll;
     font: normal 16px/1 Verdana, Geneva, sans-serif;
     text-align: center;
@@ -188,7 +182,6 @@ input {
     margin-top: 8px;
     text-overflow: clip;
     white-space: normal;
-
     word-wrap:break-word
 
 }

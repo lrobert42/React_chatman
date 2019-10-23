@@ -273,6 +273,9 @@ io.sockets.on('connection', function(socket, username){
 
     })
     socket.on('disconnect', function(reason){
+
+        if (typeof socket.user.username !== 'undefined')
+        {
         console.log(socket.user.username +" left")
         if (socket.room){
             let object = {
@@ -296,6 +299,7 @@ io.sockets.on('connection', function(socket, username){
             newList.splice(index, 1)
             typingUsers = newList
         }
+    }
     })
 
     socket.on('isTyping', function(object){
