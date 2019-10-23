@@ -6,7 +6,6 @@ import Title from './Title.js'
 export default class Chatroom extends React.Component{
     constructor(props){
         super(props)
-
         this.state = {
             messageList: [],
             isTyping:false,
@@ -30,6 +29,10 @@ export default class Chatroom extends React.Component{
         this.props.socket.on('isTyping', data =>{
 
             data == null ? this.setState({typingUsers: []}) : this.setState({typingUsers: data})
+        })
+
+        this.props.socket.on('disconnect', reason =>{
+            this.props.disconected()
         })
 
         this.props.socket.on('history', array=>{

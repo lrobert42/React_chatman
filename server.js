@@ -1,21 +1,38 @@
 var http = require('http')
 var fs = require('fs')
 var typingUsers = []
+var connectedUsers = []
+
 
 
 function isInArray(array, object){
 
     if (array.length == 0)
     {
-        return false
-    } else {
+        return null
+    }
+    else if (typeof object.password === 'undefined' || object.password === null)
+    {
+        for (i = 0; i < array.length; i++){
+            if (array[i].username === object.username)
+            {
+                let removedPassword = array[i]
+                removedPassword.password = null
+                return removedPassword
+            }
+        }
+        return null
+    }
+     else {
         for (i = 0; i < array.length; i++){
             if (array[i].username === object.username && array[i].password == object.password)
             {
-                return true
+                let removedPassword = array[i]
+                removedPassword.password = null
+                return removedPassword
             }
         }
-        return false
+        return null
     }
 }
 
@@ -25,14 +42,25 @@ function checkUserList(socket, credentials){
         if (exists){
             fs.readFile(path, 'utf-8', function(err, data){
                 if (err){
-                    throw erre
+                    throw err
                 }else {
                     var userList = JSON.parse(data)
-                    if (isInArray(userList, credentials))
+                    let userInArray = isInArray(userList, credentials)
+                    if (userInArray !== null)
                     {
                         console.log(credentials.username +" is connecting")
-                        socket.emit('connection_approved', credentials.username)
-                        socket.username = credentials.username
+                        if (typeof credentials.password === 'undefined'){
+                            socket.emit('connected_from_cookie', userInArray)
+                        }
+                        else {
+                            socket.emit('connection_approved', userInArray)
+                        }
+                        socket.user = userInArray
+                        userInArray.socket = socket.id
+                        connectedUsers.push(userInArray)
+                        console.log(connectedUsers)
+                        socket.broadcast.emit('user_list', connectedUsers)
+                        socket.emit('user_list', connectedUsers)
                         getRoomList(socket)
                     }
                     else {
@@ -49,29 +77,35 @@ function registerUser(socket, credentials){
     let path = "./users/userList.json"
     fs.exists(path, function(exists){
         if (exists){
-            console.log("file exists")
             fs.readFile(path, 'utf-8', function(err, data){
                 if (err){
                     throw err
                 } else {
                     var userList = JSON.parse(data)
-                    console.log(userList)
-                    if (isInArray(userList, credentials))
+                    let removedPassword = credentials
+                    removedPassword.password = null
+                    if (isInArray(userList, removedPassword))
                     {
                         console.log(credentials.username +" is already registered")
                         socket.emit('already_registered', credentials.username)
                     }
                     else {
+                        credentials.rank="user"
+                        credentials.subscription=[]
                         userList.push(credentials)
-                        console.log(userList)
-                        json = JSON.stringify(userList )
+                        json = JSON.stringify(userList)
                         fs.writeFile(path, json, function(err){
                             if (err)
                             {   throw err}
                             else {
-                                console.log("Connection approved. New client: " + credentials.username)
-                                socket.emit('connection_approved', credentials.username)
-                                socket.username = credentials.username,
+                                console.log("Connection approved. New user: " + credentials.username)
+                                socket.emit('connection_approved', credentials)
+                                socket.user = credentials
+                                credentials.socket = socket.id
+                                connectedUsers.push(credentials)
+                                console.log(connectedUsers)
+                                socket.broadcast.emit('user_list', connectedUsers)
+                                socket.emit('user_list', connectedUsers)
                                 getRoomList(socket)
                             }
                         })
@@ -166,7 +200,7 @@ function readHistory(socket, room){
                     socket.emit('history', JSON.parse(data), function(){
                     })
                     socket.emit('connected',{
-                        text: socket.username +" has entered the room",
+                        text: socket.user.username +" has entered the room",
                         sender: "server",
                         timestamp: Date.now()
                     })
@@ -179,7 +213,7 @@ function readHistory(socket, room){
             timestamp: Date.now(),
             text:"No history today"}])
             socket.to(room).emit('connected',{
-                text: socket.username +" has entered the room",
+                text: socket.user.username +" has entered the room",
                 sender: "server",
                 timestamp: Date.now()
             })
@@ -198,11 +232,11 @@ var io = require('socket.io')(server, {
 
 io.sockets.on('connection', function(socket, username){
 
-    socket.on('connect_from_cookie', function(username){
-    //    socket.emit('connection_approved', username)
-        socket.username = username
-        getRoomList(socket)
+    socket.on('connect_from_cookie', function(received_username){
+        let obj={username:received_username}
+        checkUserList(socket, obj)
     })
+
     socket.on('new_client', function(credentials){
                 checkUserList(socket, credentials)
             })
@@ -219,7 +253,7 @@ io.sockets.on('connection', function(socket, username){
             let object = {
                 sender:"server",
                 timestamp:Date.now(),
-                text:socket.username+" has exited the room"
+                text:socket.user.username+" has exited the room"
             }
             socket.to(oldRoom).emit('broadcast', object)
             writeHistory(object, oldRoom)
@@ -228,7 +262,7 @@ io.sockets.on('connection', function(socket, username){
         socket.room = room
         readHistory(socket, room)
         let object = {
-            text: socket.username +" has entered the room",
+            text: socket.user.username +" has entered the room",
             sender: "server",
             timestamp: Date.now()}
         socket.to(room).emit('broadcast', object)
@@ -240,18 +274,25 @@ io.sockets.on('connection', function(socket, username){
 
     })
     socket.on('disconnect', function(reason){
-        console.log(socket.username +" left")
+        console.log(socket.user.username +" left")
         if (socket.room){
             let object = {
-                text: socket.username + " has left the chat. Reason: " + reason,
+                text: socket.user.username + " has left the chat. Reason: " + reason,
                 sender: "server",
                 timestamp: Date.now()
             }
-            socket.broadcast.to(socket.room).emit('broadcast', object)
+            //socket.emit('disconnect', reason)
+            socket.to(socket.room).emit('broadcast', object)
             writeHistory(object, socket.room)
         }
+            let newArray = connectedUsers.filter(user => user.username !== socket.user.username)
+            console.log("New array: " +newArray)
+            connectedUsers = newArray
+            socket.broadcast.emit('user_list', connectedUsers)
+            socket.emit('user_list', connectedUsers)
 
-        if (typingUsers.includes(socket.username)){
+
+        if (typingUsers.includes(socket.user.username)){
             let newList = [...typingUsers]
             let index = newList.indexOf(object.username)
             newList.splice(index, 1)

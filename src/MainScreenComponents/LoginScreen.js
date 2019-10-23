@@ -16,9 +16,8 @@ constructor(props){
 }
     userLogin(credentials){
         this.props.socket.emit('new_client', credentials)
-
-        this.props.socket.on('connection_approved', username =>{
-            this.props.userConnected(username)
+        this.props.socket.on('connection_approved', user =>{
+            this.props.userConnected(user)
             })
 
         this.props.socket.on('connection_denied', () =>{
@@ -33,8 +32,8 @@ constructor(props){
 
     userRegistration(credentials){
         this.props.socket.emit('registration_asked', credentials)
-        this.props.socket.on('connection_approved', username =>{
-            this.props.userConnected(credentials.username)
+        this.props.socket.on('connection_approved', user =>{
+            this.props.userConnected(user)
         })
     }
 
@@ -100,13 +99,18 @@ constructor(props){
         event.preventDefault();
     }
 
+    capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
     render(){
         return(
             <div className="login_form">
-            <h1>{this.state.screen}</h1>
+            <h1 className="form_title">{this.capitalizeFirstLetter(this.state.screen)}</h1>
                 <form className = "username_input"
                 onSubmit = {this.handleSubmit}>
                     <input
+                    type="text"
                     onChange={this.handleUsernameChange}
                     value={this.state.username}
                     placeholder="Username"/>
@@ -120,11 +124,13 @@ constructor(props){
                     type="password"/>
                 </form>
                 <button
+                    className = "form_button"
                     onClick={this.switchLoginRegister}
                     value="login">
                         Log in
                 </button>
                 <button
+                    className = "form_button"
                     onClick={this.switchLoginRegister}
                     value="register">
                         Register

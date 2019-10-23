@@ -6,16 +6,7 @@ import Chatroom from './chatComponents/Chatroom.js'
 import LoginScreen from './MainScreenComponents/LoginScreen.js'
 
 const io = require('socket.io-client')
-const socket = io.connect('192.168.1.16:3001')
-
-
-// function Root(){
-//     return(
-//         <CookiesProvider>
-//         <App />
-//         </CookiesProvider>
-//     )
-// }
+const socket = io.connect('http://192.168.1.16:3001')
 
 
 class App extends React.Component{
@@ -23,10 +14,13 @@ class App extends React.Component{
         super(props)
 
         this.state = {
-            username: null,
+            username:null,
+            subscription:[],
+            rank:null,
             selectedRoom: null,
             roomList:[],
-            isConnected: false
+            isConnected: false,
+            userList:[]
         }
     }
 
@@ -35,30 +29,28 @@ class App extends React.Component{
         if (connectedCookie){
             this.setState({
                 isConnected:true,
-                username: connectedCookie
             }, function(){
-                socket.emit('connect_from_cookie', this.state.username)
-                console.log(this.state.username)
-                console.log(this.state.isConnected)
+                socket.emit('connect_from_cookie', connectedCookie)
             })
         }
 
-        // if (this.state.username == null){
-        //     // var user= "Bernard"
-        //     var user = prompt("Enter username:")
-        //     while(user === null || user === "")
-        //     {
-        //         alert("You must input a correct user name!")
-        //         user = prompt("Enter username:")
-        //     }
-        //     this.setState({
-        //         username: user}, function(){
-        //             socket.emit('new_client',
-        //              this.state.username)
-        //     })
-        // }
+        socket.on('connected_from_cookie', data =>{
+            console.log(data)
+            this.setState({
+                username : data.username,
+                rank : data.rank,
+                subscription : data.subscription
+             })
+        })
+
         socket.on('roomList', data =>{
             this.getRoomList(data)
+        })
+
+        socket.on('user_list', data =>{
+            this.setState({
+                userList:data
+            })
         })
     }
 
@@ -76,14 +68,15 @@ class App extends React.Component{
         })
     }
 
-    userConnected(username){
+    userConnected(data){
         this.setState({
-            username: username,
+            username : data.username,
+            rank : data.rank,
+            subscription : data.subscription,
             isConnected:true
         }, function(){
-            cookie.save('connected', username, {maxAge:15*60})
+            cookie.save('connected', this.state.username, {maxAge:15*60})
             console.log("User connected. cookie set")
-            // SET COOKIE // TODO:
         })
     }
 
@@ -100,20 +93,23 @@ class App extends React.Component{
             return(
                 <div>
                 <MainScreen
-                    roomList={this.state.roomList}
+                    roomList={this.state.subscription}
                     roomSelect={i => this.roomSelect(i)}
-                    selectedRoom={this.state.selectedRoom}/>
+                    selectedRoom={this.state.selectedRoom}
+                    userList = {this.state.userList}/>
                 <Chatroom
                 selectedRoom = {this.state.selectedRoom}
                 username ={this.state.username}
-                socket={socket} />
+                socket={socket}
+                 />
             </div>)
         }
         else {
             return(<MainScreen
-                roomList={this.state.roomList}
+                roomList={this.state.subscription}
                 roomSelect={i => this.roomSelect(i)}
-                selectedRoom={this.state.selectedRoom}/>)
+                selectedRoom={this.state.selectedRoom}
+                userList = {this.state.userList}/>)
         }
     }
 }
@@ -124,9 +120,6 @@ class App extends React.Component{
         )
     }
 }
-
-
-
 
 class MainScreen extends React.Component{
 
@@ -153,16 +146,27 @@ constructor(props){
     }
 
     renderRoomList(room){
+        console.log(this.props.userList)
         return(
         <div className="room" key={room.id} onClick={() => this.handleClick(room.name)}>{room.name}</div>)
     }
 
+    renderUserList(user){
+
+        return(
+            <li>{user.username}</li>
+    )}
+
     render(){
         return(
         <div className={this.state.drawer} id="wrapper">
-            {this.props.roomList.map((roomList) =>(
-                this.renderRoomList(roomList)
+            {this.props.selectedRoom ? <h3> Your channels </h3> : null}
+            {!this.props.roomList ? <h1>You subscription list seems empty... Browse TODO: POPUP</h1> :
+                this.props.roomList.map((room) =>(
+                this.renderRoomList(room)
             ))}
+            <ul>{this.props.userList.map((user) =>(this.renderUserList(user)))}
+            </ul>
         </div>
         )}
 }

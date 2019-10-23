@@ -1,3 +1,52 @@
+/* Bordered form */
+.login_form {
+  border: 3px solid #f1f1f1;
+  width: 40%;
+  position:absolute;
+  top:10%;
+  left:30%
+}
+
+h1 {
+    display: block;
+    font-size: 2em;
+    margin-top: 0.67em;
+    margin-bottom: 0.67em;
+    text-align: center;
+    font-weight: bold;
+    font: bold 32px/normal Verdana, Geneva, sans-serif;
+
+}
+
+/* Full-width inputs */
+input[className="username_input"], input[type=password] {
+  width: 60%;
+  position: relative;
+  left: 20%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+.form_button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 60%;
+  position: relative;
+  left: 20%
+}
+
+/* Add a hover effect for buttons */
+.form_button:hover {
+  opacity: 0.8;
+}
 
 .root{
     position: absolute;
@@ -61,6 +110,12 @@ div#wrapper.closed.roomlist_open_drawer{
     padding: 20px;
 }
 
+.room:hover{
+    opacity: 0.8;
+    background-color:red
+}
+
+
 .room_name
 {
     vertical-align: middle;
@@ -115,7 +170,6 @@ input {
     margin-top: 8px;
     text-overflow: clip;
     white-space: normal;
-
     word-wrap:break-word
 }
 
