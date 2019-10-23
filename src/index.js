@@ -52,6 +52,14 @@ class App extends React.Component{
                 userList:data
             })
         })
+
+        socket.io.on('connect_error', () =>{
+            this.setState({isConnected:false})
+            if (cookie.load('connected')){
+                cookie.remove('connected')
+            }
+            alert("There's an issue on the server. Please try again later")
+        })
     }
 
     getRoomList(data){
@@ -146,7 +154,6 @@ constructor(props){
     }
 
     renderRoomList(room){
-        console.log(this.props.userList)
         return(
         <div className="room" key={room.id} onClick={() => this.handleClick(room.name)}>{room.name}</div>)
     }
@@ -154,7 +161,7 @@ constructor(props){
     renderUserList(user){
 
         return(
-            <li>{user.username}</li>
+            <li key={user.socket}>{user.username}</li>
     )}
 
     render(){
@@ -165,6 +172,7 @@ constructor(props){
                 this.props.roomList.map((room) =>(
                 this.renderRoomList(room)
             ))}
+            <h4>Connected  users</h4>
             <ul>{this.props.userList.map((user) =>(this.renderUserList(user)))}
             </ul>
         </div>

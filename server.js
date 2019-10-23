@@ -58,7 +58,6 @@ function checkUserList(socket, credentials){
                         socket.user = userInArray
                         userInArray.socket = socket.id
                         connectedUsers.push(userInArray)
-                        console.log(connectedUsers)
                         socket.broadcast.emit('user_list', connectedUsers)
                         socket.emit('user_list', connectedUsers)
                         getRoomList(socket)
@@ -286,7 +285,6 @@ io.sockets.on('connection', function(socket, username){
             writeHistory(object, socket.room)
         }
             let newArray = connectedUsers.filter(user => user.username !== socket.user.username)
-            console.log("New array: " +newArray)
             connectedUsers = newArray
             socket.broadcast.emit('user_list', connectedUsers)
             socket.emit('user_list', connectedUsers)
