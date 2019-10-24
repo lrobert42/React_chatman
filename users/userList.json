@@ -1,4 +1,21 @@
-[{"username":"Lucas","password":"lucas","rank":"admin","subscription":[{"id":"1",
-    "name":"General"},
-    {"id":"2",
-    "name":"Room2"}]},{"username":"caca","password":"prout","rank":"user","subscription":[]},{"username":"Lucas","password":"sdgdfg","rank":"user","subscription":[]}]
+[{
+    "username":"Lucas",
+    "password":"lucas",
+    "rank":"admin",
+    "subscription":[
+        {
+            "id":"1",
+            "name":"General"},
+        {
+            "id":"2",
+    "name":"Room2"}
+    ]
+},
+    {
+        "username":"caca",
+        "password":"prout",
+        "rank":"user",
+        "subscription":[{
+            "id":"1",
+            "name":"General"}]
+        }]

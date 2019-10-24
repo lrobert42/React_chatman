@@ -274,32 +274,32 @@ io.sockets.on('connection', function(socket, username){
     })
     socket.on('disconnect', function(reason){
 
-        if (typeof socket.user.username !== 'undefined')
+        if (typeof socket.user !== 'undefined')
         {
-        console.log(socket.user.username +" left")
-        if (socket.room){
-            let object = {
-                text: socket.user.username + " has left the chat. Reason: " + reason,
-                sender: "server",
-                timestamp: Date.now()
+            console.log(socket.user.username +" left")
+            if (socket.room){
+                let object = {
+                    text: socket.user.username + " has left the chat. Reason: " + reason,
+                    sender: "server",
+                    timestamp: Date.now()
+                }
+                //socket.emit('disconnect', reason)
+                socket.to(socket.room).emit('broadcast', object)
+                writeHistory(object, socket.room)
             }
-            //socket.emit('disconnect', reason)
-            socket.to(socket.room).emit('broadcast', object)
-            writeHistory(object, socket.room)
-        }
-            let newArray = connectedUsers.filter(user => user.username !== socket.user.username)
-            connectedUsers = newArray
-            socket.broadcast.emit('user_list', connectedUsers)
-            socket.emit('user_list', connectedUsers)
+                let newArray = connectedUsers.filter(user => user.username !== socket.user.username)
+                connectedUsers = newArray
+                socket.broadcast.emit('user_list', connectedUsers)
+                socket.emit('user_list', connectedUsers)
 
 
-        if (typingUsers.includes(socket.user.username)){
-            let newList = [...typingUsers]
-            let index = newList.indexOf(object.username)
-            newList.splice(index, 1)
-            typingUsers = newList
+            if (typingUsers.includes(socket.user.username)){
+                let newList = [...typingUsers]
+                let index = newList.indexOf(object.username)
+                newList.splice(index, 1)
+                typingUsers = newList
+            }
         }
-    }
     })
 
     socket.on('isTyping', function(object){

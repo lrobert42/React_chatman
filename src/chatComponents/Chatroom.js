@@ -1,7 +1,6 @@
 import React from 'react'
 import MessageInput from './MessageInput.js'
 import MessageList from './MessageList.js'
-import Title from './Title.js'
 
 export default class Chatroom extends React.Component{
     constructor(props){
@@ -86,21 +85,36 @@ export default class Chatroom extends React.Component{
         }
     }
 
-        render(){
-            return(
-                <div className="app">
-                    <Title
-                    selectedRoom={this.props.selectedRoom}/>
-                    <MessageList
-                        typingUsers = {this.state.typingUsers}
-                        messageList={this.state.messageList}
-                        username={this.props.username}
-                     />
-                    <MessageInput
-                        sendMessage={i=> this.sendMessage(i)}
-                        isTyping={bool => this.isTyping(bool)}
-                    />
-                </div>
+    renderIsTyping(array){
+        if (array.length)
+        {
+            if (array.length === 1)
+            {   return(
+                <div>{array} is typing</div>
             )
+            } else {
+            return(
+                <div>{array.join(', ')} are typing</div>
+            )
+            }
         }
+    }
+    render(){
+        return(
+            <div className="chat_tab">
+                <MessageList
+                    typingUsers = {this.state.typingUsers}
+                    messageList={this.state.messageList}
+                    username={this.props.username}
+                 />
+                 <div className="is_typing">
+                     {this.renderIsTyping(this.state.typingUsers)}
+                 </div>
+                <MessageInput
+                    sendMessage={i=> this.sendMessage(i)}
+                    isTyping={bool => this.isTyping(bool)}
+                />
+            </div>
+        )
+    }
 }

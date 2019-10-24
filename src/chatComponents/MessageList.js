@@ -1,20 +1,7 @@
 import React from 'react'
 
 export default class MessageList extends React.Component{
-    renderIsTyping(array){
-        if (array.length)
-        {
-            if (array.length === 1)
-            {   return(
-                <div>{array} is typing</div>
-            )
-            } else {
-            return(
-                <div>{array.join(', ')} are typing</div>
-            )
-            }
-        }
-    }
+
 
     renderMessageList(object){
         if (object.sender === "server"){
@@ -38,9 +25,7 @@ export default class MessageList extends React.Component{
                     {this.props.messageList.map((messageList) =>(
                         this.renderMessageList(messageList)
                     ))}
-                    <div className="is_typing">
-                        {this.renderIsTyping(this.props.typingUsers)}
-                    </div>
+
                 </div>
 
             </div>

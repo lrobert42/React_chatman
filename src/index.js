@@ -4,6 +4,7 @@ import './index.css'
 import  cookie  from 'react-cookies'
 import Chatroom from './chatComponents/Chatroom.js'
 import LoginScreen from './MainScreenComponents/LoginScreen.js'
+import MainScreen from './MainScreenComponents/MainScreen'
 
 const io = require('socket.io-client')
 const socket = io.connect('http://192.168.1.16:3001')
@@ -91,97 +92,129 @@ class App extends React.Component{
         })
     }
 
+    renderHeader(){
+        if (!this.state.isConnected){
+            return(
+                <div class="mdl-layout mdl-js-layout
+                    mdl-layout--fixed-header">
+                    <header class="mdl-layout__header">
+                        <div class="mdl-layout__header-row">
+                            <span class="mdl-layout-title">Chatman</span>
+
+                        </div>
+                    </header>
+                    <main class="mdl-layout__content">
+                        <div class="page-content">{this.renderChat()}</div>
+                    </main>
+                </div>
+            )
+        }
+        else{
+            // if (!this.state.selectedRoom){
+            return(
+                <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
+                mdl-layout--fixed-header">
+                <header class="mdl-layout__header">
+                    <div class="mdl-layout__header-row">
+                        <span class="mdl-layout-title">Chatman</span>
+                        <div class="mdl-layout-spacer"></div>
+                    </div>
+                </header>
+                <div class="mdl-layout__drawer">
+                    <span class="mdl-layout-title">Navigation</span>
+                    <nav class="mdl-navigation">
+                        <div class="mdl-navigation__link" href="">Browse our channels</div>
+                        <div class="mdl-navigation__link" href="">Connected users</div>
+                        <div class="mdl-navigation__link" href="">Create room</div>
+                        <div class="mdl-navigation__link" href="">Disconnect</div>
+                    </nav>
+                </div>
+                <main class="mdl-layout__content">
+                    <div class="page-content">{this.renderChat()}</div>
+                </main>
+            </div>)
+        // }
+      //   else{
+      //       return(
+      //           <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header
+      //               mdl-layout--fixed-tabs">
+      //               <header class="mdl-layout__header">
+      //                   <div class="mdl-layout__header-row">
+      //                       <span class="mdl-layout-title">Chatman</span>
+      //                   </div>
+      //                   <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
+      //                       <div href="#fixed-tab-1" class="mdl-layout__tab is-active">Room1</div>
+      //                       <div href="#fixed-tab-2" class="mdl-layout__tab">Room2</div>
+      //                       <div href="#fixed-tab-3" class="mdl-layout__tab">Room3</div>
+      //                   </div>
+      //               </header>
+      //               <div class="mdl-layout__drawer">
+      //                   <span class="mdl-layout-title">Title</span>
+      //               </div>
+      //               <main class="mdl-layout__content">
+      //                   <section class="mdl-layout__tab-panel is-active" id="fixed-tab-1">
+      //                       <div class="page-content"></div>
+      //                   </section>
+      //                   <section class="mdl-layout__tab-panel" id="fixed-tab-2">
+      //                       <div class="page-content">    caca</div>
+      //                   </section>
+      //                   <section class="mdl-layout__tab-panel" id="fixed-tab-3">
+      //                       <div class="page-content">caac</div>
+      //                   </section>
+      //               </main>
+      //           </div>
+      // )
+      //   }
+
+        }
+    }
+
     renderChat(){
+
     if (!this.state.isConnected){
         return(
-        <LoginScreen
-        userConnected = {i => this.userConnected(i)}
-        socket={socket}/>
-        )
+            <div className="login_screen">
+                <LoginScreen
+                    userConnected = {i => this.userConnected(i)}
+                    socket={socket}/>
+        </div>)
     }
     else{
         if(this.state.selectedRoom){
             return(
-                <div>
-                <MainScreen
-                    roomList={this.state.subscription}
-                    roomSelect={i => this.roomSelect(i)}
-                    selectedRoom={this.state.selectedRoom}
-                    userList = {this.state.userList}/>
+                <div className="chatroom">
                 <Chatroom
-                selectedRoom = {this.state.selectedRoom}
-                username ={this.state.username}
-                socket={socket}
-                disconnect={() => this.disconnect()}
+                    selectedRoom = {this.state.selectedRoom}
+                    username ={this.state.username}
+                    socket={socket}
+                    disconnect={() => this.disconnect()}
                  />
             </div>)
         }
         else {
-            return(<MainScreen
+            return(
+                <div className = "room_selection">
+                <MainScreen
                 roomList={this.state.subscription}
                 roomSelect={i => this.roomSelect(i)}
                 selectedRoom={this.state.selectedRoom}
-                userList = {this.state.userList}/>)
+                userList = {this.state.userList}/>
+        </div>)
         }
     }
 }
 
     render(){
         return(
-            <div className="app">{this.renderChat()} </div>
+            <div className="root">
+                {this.renderHeader()}
+            </div>
         )
     }
 }
 
-class MainScreen extends React.Component{
 
-constructor(props){
-    super(props)
-    this.state = {
-        drawer: this.props.selectedRoom ? "roomlist_closed_drawer" :"roomlist_open_drawer"
-        //drawer: "roomlist_open_drawer"
-    }
-    this.handleClick = this.handleClick.bind(this)
-}
-    componentDidMount(){
-        if(this.props.roomSelected){
-            console.log("updtaing")
-            // const wrapper = document.getElementById("wrapper")
-            // wrapper.classList.add('closed')
-        }
-    }
-    handleClick(e){
-        if (this.props.selectedRoom !== e)
-        {
-            this.props.roomSelect(e)
-        }
-    }
 
-    renderRoomList(room){
-        return(
-        <div className="room" key={room.id} onClick={() => this.handleClick(room.name)}>{room.name}</div>)
-    }
-
-    renderUserList(user){
-
-        return(
-            <li key={user.socket}>{user.username}</li>
-    )}
-
-    render(){
-        return(
-        <div className= {this.state.drawer} id="wrapper">
-            {this.props.selectedRoom ? <h3> Your channels </h3> : null}
-            {!this.props.roomList ? <h1>You subscription list seems empty... Browse TODO: POPUP</h1> :
-                this.props.roomList.map((room) =>(
-                this.renderRoomList(room)
-            ))}
-            <h4>Connected users</h4>
-            <ul>{this.props.userList.map((user) =>(this.renderUserList(user)))}
-            </ul>
-        </div>
-        )}
-}
 ReactDOM.render(
 
     <App />,
