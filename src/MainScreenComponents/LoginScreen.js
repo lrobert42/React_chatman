@@ -78,19 +78,16 @@ export default class LoginScreen extends React.Component{
 
     validateInputAndSubmit(){
         if (this.state.username.trim() !== '' && this.state.password.trim() !== ''){
-                let credentials = {
-                    username:this.state.username,
-                    password:this.state.password
-                }
-                this.setState({
-                    username:'',
-                    password:''
-                }, function(){
-                        this.state.screen === "login"? this.userLogin(credentials) : this.userRegistration(credentials)
-                })
+            let credentials = {
+                username:this.state.username,
+                password:this.state.password
             }
-        else {
-            console.log("caca")
+            this.setState({
+                username:'',
+                password:''
+            }, function(){
+                    this.state.screen === "login"? this.userLogin(credentials) : this.userRegistration(credentials)
+            })
         }
     }
 
@@ -106,11 +103,11 @@ export default class LoginScreen extends React.Component{
 
     render(){
         return(
-            <div className=" w3-card-4 login_form">
-            <h1 className="w3-container form_title">{this.capitalizeFirstLetter(this.state.screen)}</h1>
-                <form className = "w3-input username_input"
+            <div className="login_form">
+            <h1 className="form_title">{this.capitalizeFirstLetter(this.state.screen)}</h1>
+                <form
                 onSubmit = {this.handleSubmit}>
-                    <input
+                    <input class="username_input"
                     type="text"
                     onChange={this.handleUsernameChange}
                     value={this.state.username}
@@ -125,12 +122,14 @@ export default class LoginScreen extends React.Component{
                     type="password"/>
                 </form>
                 <button
+                    disabled={(this.state.username.length > 0 && this.state.password.length > 0) ? "false" : "true"}
                     className = "form_button"
                     onClick={this.switchLoginRegister}
                     value="login">
                         Log in
                 </button>
                 <button
+                    disabled = "true"
                     className = "form_button"
                     onClick={this.switchLoginRegister}
                     value="register">

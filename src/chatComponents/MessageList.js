@@ -1,8 +1,7 @@
 import React from 'react'
 
 export default class MessageList extends React.Component{
-
-
+    
     renderMessageList(object){
         if (object.sender === "server"){
             return (

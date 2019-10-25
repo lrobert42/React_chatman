@@ -22,6 +22,8 @@ class App extends React.Component{
             isConnected: false,
             userList:[]
         }
+        this.onBackButtonClicked = this.onBackButtonClicked.bind(this)
+        this.onDisconnectClicked = this.onDisconnectClicked.bind(this)
     }
 
     componentDidMount(){
@@ -58,13 +60,12 @@ class App extends React.Component{
         })
     }
 
-
     disconnect(){
         this.setState({isConnected:false})
         if (cookie.load('connected')){
             cookie.remove('connected')
         }
-        alert("There's an issue on the server. Please try again later")
+        alert("You've been disconnected from the server")
     }
     getRoomList(data){
         const array = this.state.roomList
@@ -92,94 +93,76 @@ class App extends React.Component{
         })
     }
 
+    onBackButtonClicked()
+    {
+        this.setState({
+            selectedRoom:null
+        })
+    }
+
+    onDisconnectClicked(){
+        socket.disconnect()
+        this.disconnect()
+    }
+
     renderHeader(){
         if (!this.state.isConnected){
             return(
-                <div class="mdl-layout mdl-js-layout
+                <div className="mdl-layout mdl-js-layout
                     mdl-layout--fixed-header">
-                    <header class="mdl-layout__header">
-                        <div class="mdl-layout__header-row">
-                            <span class="mdl-layout-title">Chatman</span>
+                    <header className="mdl-layout__header">
+                        <div className="mdl-layout__header-row">
+                            <span className="mdl-layout-title">Chatman</span>
 
                         </div>
                     </header>
-                    <main class="mdl-layout__content">
-                        <div class="page-content">{this.renderChat()}</div>
+                    <main className="mdl-layout__content">
+                        <div className="page-content">
+                            <LoginScreen
+                                userConnected = {i => this.userConnected(i)}
+                                socket={socket}/>
+                        </div>
                     </main>
                 </div>
             )
         }
         else{
-            // if (!this.state.selectedRoom){
             return(
-                <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
+                <div className="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
                 mdl-layout--fixed-header">
-                <header class="mdl-layout__header">
-                    <div class="mdl-layout__header-row">
-                        <span class="mdl-layout-title">Chatman</span>
-                        <div class="mdl-layout-spacer"></div>
+                <header className="mdl-layout__header">
+                    <div className="mdl-layout__header-row">
+                        {this.state.selectedRoom ?
+                            <button className="back_button mdl-button mdl-js-button mdl-button--icon"
+                                onClick={this.onBackButtonClicked}>
+                          <i className= " material-icons md-18">arrow_back</i>
+                        </button> : null}
+                        <span className="chatroom_title mdl-layout-title">{this.state.selectedRoom? this.state.selectedRoom : "Chatman"}</span>
+                        <div className="mdl-layout-spacer"></div>
                     </div>
                 </header>
-                <div class="mdl-layout__drawer">
-                    <span class="mdl-layout-title">Navigation</span>
-                    <nav class="mdl-navigation">
-                        <div class="mdl-navigation__link" href="">Browse our channels</div>
-                        <div class="mdl-navigation__link" href="">Connected users</div>
-                        <div class="mdl-navigation__link" href="">Create room</div>
-                        <div class="mdl-navigation__link" href="">Disconnect</div>
+                <div className="mdl-layout__drawer">
+                    <span className="mdl-layout-title">Navigation</span>
+                    <nav className="mdl-navigation">
+                        <div className="mdl-navigation__link">Browse our channels</div>
+                        <div className="mdl-navigation__link" href="">Connected users</div>
+                        <div className="mdl-navigation__link" href="">Create room</div>
+                        <div className="mdl-navigation__link"
+                            onClick= {this.onDisconnectClicked}>Disconnect</div>
                     </nav>
                 </div>
-                <main class="mdl-layout__content">
-                    <div class="page-content">{this.renderChat()}</div>
+                <main className="mdl-layout__content">
+                    <div className="page-content">{this.renderChat()}</div>
                 </main>
             </div>)
-        // }
-      //   else{
-      //       return(
-      //           <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header
-      //               mdl-layout--fixed-tabs">
-      //               <header class="mdl-layout__header">
-      //                   <div class="mdl-layout__header-row">
-      //                       <span class="mdl-layout-title">Chatman</span>
-      //                   </div>
-      //                   <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
-      //                       <div href="#fixed-tab-1" class="mdl-layout__tab is-active">Room1</div>
-      //                       <div href="#fixed-tab-2" class="mdl-layout__tab">Room2</div>
-      //                       <div href="#fixed-tab-3" class="mdl-layout__tab">Room3</div>
-      //                   </div>
-      //               </header>
-      //               <div class="mdl-layout__drawer">
-      //                   <span class="mdl-layout-title">Title</span>
-      //               </div>
-      //               <main class="mdl-layout__content">
-      //                   <section class="mdl-layout__tab-panel is-active" id="fixed-tab-1">
-      //                       <div class="page-content"></div>
-      //                   </section>
-      //                   <section class="mdl-layout__tab-panel" id="fixed-tab-2">
-      //                       <div class="page-content">    caca</div>
-      //                   </section>
-      //                   <section class="mdl-layout__tab-panel" id="fixed-tab-3">
-      //                       <div class="page-content">caac</div>
-      //                   </section>
-      //               </main>
-      //           </div>
-      // )
-      //   }
-
         }
     }
 
+
+
+
     renderChat(){
 
-    if (!this.state.isConnected){
-        return(
-            <div className="login_screen">
-                <LoginScreen
-                    userConnected = {i => this.userConnected(i)}
-                    socket={socket}/>
-        </div>)
-    }
-    else{
         if(this.state.selectedRoom){
             return(
                 <div className="chatroom">
@@ -202,7 +185,6 @@ class App extends React.Component{
         </div>)
         }
     }
-}
 
     render(){
         return(

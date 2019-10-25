@@ -3,8 +3,6 @@ var fs = require('fs')
 var typingUsers = []
 var connectedUsers = []
 
-
-
 function isInArray(array, object){
 
     if (array.length == 0)
@@ -165,7 +163,6 @@ function writeHistory(object, room){
                 else {
                     var read = JSON.parse(data)
                     read.push(object)
-
                     json = JSON.stringify(read)
                     fs.writeFile(fullPath, json, function(err){
                         if (err)
@@ -225,6 +222,7 @@ var server = http.createServer(function(req, res){
         res.end()
     })
 var io = require('socket.io')(server, {
+    //TODO change
     pingInterval: 100000000,
     pingTimeout: 10000
 })
@@ -232,11 +230,13 @@ var io = require('socket.io')(server, {
 io.sockets.on('connection', function(socket, username){
 
     socket.on('connect_from_cookie', function(received_username){
+        //TODO check if user is already connected
         let obj={username:received_username}
         checkUserList(socket, obj)
     })
 
     socket.on('new_client', function(credentials){
+        //TODO check if user is already connected
                 checkUserList(socket, credentials)
             })
 

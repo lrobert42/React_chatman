@@ -1,10 +1,10 @@
 /* Bordered form */
 .login_form {
   border: 3px solid #f1f1f1;
-  width: 40%;
+  width: 60%;
   position:absolute;
   top:10%;
-  left:30%
+  left:20%
 }
 
 h1 {
@@ -17,9 +17,34 @@ h1 {
     font: bold 32px/normal Verdana, Geneva, sans-serif;
 
 }
+.back_button {
+    padding-left: 10px;
 
-/* Full-width inputs */
-input[className="username_input"], input[type=password] {
+    }
+
+.chatroom_title{
+    text-align: center;
+    vertical-align: baseline;
+    padding: 15px;
+    padding-top: 19px
+
+}
+
+
+.username_input{
+    width: 60%;
+    position: relative;
+    left: 20%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+
+
+input[type=password] {
   width: 60%;
   position: relative;
   left: 20%;
@@ -125,6 +150,7 @@ input[className="username_input"], input[type=password] {
     display: inline-block;
     position: absolute;
     left: 5%;
+    right:50%;
     padding-left: 18px;
     bottom: 2em;
 }
