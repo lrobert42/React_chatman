@@ -286,7 +286,7 @@ io.sockets.on('connection', function(socket, username){
                 //socket.emit('disconnect', reason)
                 socket.to(socket.room).emit('broadcast', object)
                 writeHistory(object, socket.room)
-            }
+                }
                 let newArray = connectedUsers.filter(user => user.username !== socket.user.username)
                 connectedUsers = newArray
                 socket.broadcast.emit('user_list', connectedUsers)
@@ -295,7 +295,7 @@ io.sockets.on('connection', function(socket, username){
 
             if (typingUsers.includes(socket.user.username)){
                 let newList = [...typingUsers]
-                let index = newList.indexOf(object.username)
+                let index = newList.indexOf(socket.user.username)
                 newList.splice(index, 1)
                 typingUsers = newList
             }
@@ -321,4 +321,4 @@ io.sockets.on('connection', function(socket, username){
     })
 })
 
-server.listen(3001, "192.168.1.16")
+server.listen(3001, "192.168.1.14")

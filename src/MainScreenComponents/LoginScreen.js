@@ -107,7 +107,7 @@ export default class LoginScreen extends React.Component{
             <h1 className="form_title">{this.capitalizeFirstLetter(this.state.screen)}</h1>
                 <form
                 onSubmit = {this.handleSubmit}>
-                    <input class="username_input"
+                    <input className="username_input"
                     type="text"
                     onChange={this.handleUsernameChange}
                     value={this.state.username}
@@ -122,14 +122,12 @@ export default class LoginScreen extends React.Component{
                     type="password"/>
                 </form>
                 <button
-                    disabled={(this.state.username.length > 0 && this.state.password.length > 0) ? "false" : "true"}
                     className = "form_button"
                     onClick={this.switchLoginRegister}
                     value="login">
                         Log in
                 </button>
                 <button
-                    disabled = "true"
                     className = "form_button"
                     onClick={this.switchLoginRegister}
                     value="register">

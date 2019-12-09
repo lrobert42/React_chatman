@@ -5,9 +5,10 @@ import  cookie  from 'react-cookies'
 import Chatroom from './chatComponents/Chatroom.js'
 import LoginScreen from './MainScreenComponents/LoginScreen.js'
 import MainScreen from './MainScreenComponents/MainScreen'
+import Popup from './MainScreenComponents/Popup.js'
 
 const io = require('socket.io-client')
-const socket = io.connect('http://192.168.1.16:3001')
+const socket = io.connect('http://192.168.1.14:3001')
 
 class App extends React.Component{
     constructor(props){
@@ -20,10 +21,12 @@ class App extends React.Component{
             selectedRoom: null,
             roomList:[],
             isConnected: false,
-            userList:[]
+            userList:[],
+            showPopup:null
         }
         this.onBackButtonClicked = this.onBackButtonClicked.bind(this)
         this.onDisconnectClicked = this.onDisconnectClicked.bind(this)
+        this.onUserlistClicked = this.onUserlistClicked.bind(this)
     }
 
     componentDidMount(){
@@ -93,6 +96,12 @@ class App extends React.Component{
         })
     }
 
+    popupButtonHandler(){
+        this.setState({
+            showPopup: null
+        })
+    }
+
     onBackButtonClicked()
     {
         this.setState({
@@ -103,6 +112,11 @@ class App extends React.Component{
     onDisconnectClicked(){
         socket.disconnect()
         this.disconnect()
+    }
+
+    onUserlistClicked(){
+        console.log("user cliecked")
+        this.setState({showPopup: "userList"})
     }
 
     renderHeader(){
@@ -145,21 +159,24 @@ class App extends React.Component{
                     <span className="mdl-layout-title">Navigation</span>
                     <nav className="mdl-navigation">
                         <div className="mdl-navigation__link">Browse our channels</div>
-                        <div className="mdl-navigation__link" href="">Connected users</div>
-                        <div className="mdl-navigation__link" href="">Create room</div>
+                        <div className="mdl-navigation__link"
+                            onClick={this.onUserlistClicked}>Connected users</div>
                         <div className="mdl-navigation__link"
                             onClick= {this.onDisconnectClicked}>Disconnect</div>
                     </nav>
                 </div>
                 <main className="mdl-layout__content">
+                    {this.state.showPopup ? <Popup
+                        onCloseButtonClicked={() =>this.popupButtonHandler()}
+                        userList={this.state.userList}
+                        roomList={this.state.roomList}
+                        popupType={this.state.showPopup}/> : null
+                        }
                     <div className="page-content">{this.renderChat()}</div>
                 </main>
             </div>)
         }
     }
-
-
-
 
     renderChat(){
 
